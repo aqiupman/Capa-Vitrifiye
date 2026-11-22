@@ -2,9 +2,9 @@
 
 Islak hacimlerdeki vitrifiye ve armatür montajını mahal bazında takip etmek ve Creavit ürün listesiyle eşleştirilmiş teslim tutanağı (Excel) üretmek için tek sayfalık web programı.
 
-- **Montaj Takibi:** Mahal seçilir, mahaldeki kalemler tiklenerek "Yapıldı" işaretlenir.
-- **Teslim Tutanağı:** Yalnızca montajı tamamlanan mahaller ve kalemler, Creavit R05 ürün adı ve kodlarıyla listelenir; "Excel olarak indir" ile tutanak alınır.
+Bu sayfa **salt okunur rapordur**: montaj durumu burada değiştirilemez, belirtilen tarihteki durumu gösterir. İşaretleme yetkili kullanıcılar tarafından ana takip programında yapılır; rapor oradan güncellenir.
 
-İşaretler tarayıcının yerel hafızasında tutulur (cihazlar arasında paylaşılmaz).
+- **Özet:** Montaj durumu grafiği ve vitrifiye bazında ilerleme.
+- **Teslim Tutanağı:** Yalnızca montajı tamamlanan mahaller ve kalemler, Creavit R05 ürün adı ve kodlarıyla listelenir; "Excel olarak indir" ile tutanak alınır.
 
 Yayın: GitHub Pages → Settings › Pages › Branch: `main`, klasör: `/ (root)`.

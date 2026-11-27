@@ -117,6 +117,18 @@ details{margin-top:24px}summary{cursor:pointer;font:700 18px "Barlow Semi Conden
 .p3side .box{width:28px;height:28px}
 .p3side .meter{margin:4px 0 12px}
 @media(max-width:900px){.p3wrap{grid-template-columns:minmax(0,1fr)}.p3c{height:62vh}.p3side{max-height:none}}
+#p3View.full{position:fixed;inset:0;z-index:60;max-width:none;margin:0;padding:10px;background:var(--bg);display:flex;flex-direction:column}
+#p3View.full .p3wrap{flex:1;min-height:0;grid-template-columns:minmax(0,1fr) 380px}
+#p3View.full .p3c{height:100%;min-height:0}
+#p3View.full .p3side{max-height:none;height:100%}
+#p3View.full .leg3 .lg-room{display:none}
+.isobar{display:none;align-items:center;gap:12px;flex-wrap:wrap}
+#p3View.full .isobar{display:flex}#p3View.full #p3reset{display:none}
+.isobar h2{font-size:clamp(22px,3vw,30px)}
+.btn.back{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.num{display:inline-grid;place-items:center;min-width:22px;height:22px;border-radius:11px;background:var(--sel);border:1px solid var(--selLine);font:700 12px Barlow,sans-serif;margin-right:6px;vertical-align:1px;padding:0 5px}
+.it.on .num{background:var(--tick);border-color:var(--tick);color:#fff}
+@media(max-width:900px){#p3View.full{overflow:auto;display:block}#p3View.full .p3wrap{grid-template-columns:minmax(0,1fr)}#p3View.full .p3c{height:64vh}#p3View.full .p3side{height:auto}}
 
 .robox{background:var(--sel);border:1px solid var(--selLine);border-radius:8px;padding:10px 14px;font-size:14px;margin-bottom:12px}
 .items.ro .it{cursor:default}.items.ro .it:hover{background:inherit}.items.ro .it.on:hover{background:var(--done)}
@@ -175,7 +187,7 @@ details{margin-top:24px}summary{cursor:pointer;font:700 18px "Barlow Semi Conden
   <section id="sheet" aria-live="polite"></section>
 </main>
 <div id="p3View" hidden>
-  <div class="p3bar">
+  <div class="p3bar"><div class="isobar"><button class="btn back" id="p3back">← Kat planına dön</button><h2 id="isoTitle"></h2></div>
     <div class="seg" role="group" aria-label="Duvar yüksekliği"><button class="sg" data-w="1.1" aria-pressed="true">Alçak duvar</button><button class="sg" data-w="2.8" aria-pressed="false">Tam duvar</button></div>
     <div class="seg" role="group" aria-label="Görünüm"><button class="sv" data-c="persp" aria-pressed="true">Perspektif</button><button class="sv" data-c="top" aria-pressed="false">Üstten</button></div>
     <button class="btn" id="p3reset">Tüm kat</button>
@@ -273,12 +285,14 @@ function p3side(){
   const hasTakip=!!document.querySelector('.tab[data-v="takip"]');
   el.innerHTML=`<h3>${esc(r.k)} · ${esc(r.n)}</h3><div class="code">${esc(r.a)} m² · ${d} / ${a} adet yapıldı</div>
    <div class="meter"><i style="width:${a?d/a*100:0}%"></i></div>
-   ${ro?'<div class="robox">Salt okunur görünüm.</div>':'<p class="foot" style="margin:0 0 10px">3D\'de bu mahaldeki bir vitrifiyeye dokunarak ya da aşağıdaki listeden durumunu değiştirebilirsiniz.</p>'}
-   <ul class="items${ro?' ro':''}" id="p3items">${r.i.map(([p,qn,add],ix)=>`<li class="it${s[p]?' on':''}" data-ix="${ix}" role="checkbox" aria-checked="${!!s[p]}" aria-disabled="${ro}" tabindex="${ro?-1:0}"><span class="box">${tick}</span><span class="t">${esc(cap(p))}${add?'<small>Planda konumu yok</small>':''}</span><span class="q">${qn} adet</span></li>`).join('')}</ul>
-   ${hasTakip?'<p style="margin:12px 0 0"><button class="btn" id="p3go">Montaj Takibi\'nde aç</button></p>':''}`;
+   ${ro?'<div class="robox">Salt okunur görünüm.</div>':'<p class="foot" style="margin:0 0 10px">Modeldeki numaralı vitrifiyeye dokunarak ya da aşağıdaki listeden durumunu değiştirebilirsiniz.</p>'}
+   <ul class="items${ro?' ro':''}" id="p3items">${r.i.map(([p,qn,add],ix)=>`<li class="it${s[p]?' on':''}" data-ix="${ix}" role="checkbox" aria-checked="${!!s[p]}" aria-disabled="${ro}" tabindex="${ro?-1:0}"><span class="box">${tick}</span><span class="t">${add?'':`<span class="num">${ix+1}</span>`}${esc(cap(p))}${add?'<small>Planda konumu yok</small>':''}</span><span class="q">${qn} adet</span></li>`).join('')}</ul>
+   <p style="margin:12px 0 0;display:flex;gap:8px;flex-wrap:wrap">${window.__p3&&window.__p3.iso()?'<button class="btn" id="p3back2">← Kat planına dön</button>':'<button class="btn pri" id="p3iso">Mahali büyüt</button>'}${hasTakip?'<button class="btn" id="p3go">Montaj Takibi\'nde aç</button>':''}</p>`;
 }
 $('#p3side').addEventListener('click',e=>{
-  if(e.target.id==='p3go'){cur=p3sel;document.querySelector('.tab[data-v="takip"]').click();return}
+  if(e.target.id==='p3go'){window.__p3&&window.__p3.exitIso();cur=p3sel;document.querySelector('.tab[data-v="takip"]').click();return}
+  if(e.target.id==='p3iso'){window.__p3&&window.__p3.enterIso(p3sel);return}
+  if(e.target.id==='p3back2'){window.__p3&&window.__p3.exitIso();return}
   const li=e.target.closest('.it');if(!li||ro||!p3sel)return;
   const keep=cur;cur=p3sel;toggle(+li.dataset.ix);save(cur);cur=keep;renderAll();
 });
@@ -297,7 +311,7 @@ async function open3d(){
 function build3d(){
   const host=$('#p3c');
   const dark=matchMedia('(prefers-color-scheme: dark)').matches&&document.documentElement.dataset.theme!=='light'||document.documentElement.dataset.theme==='dark';
-  const R=new THREE.WebGLRenderer({antialias:true});R.setPixelRatio(Math.min(devicePixelRatio,2));host.appendChild(R.domElement);
+  const R=new THREE.WebGLRenderer({antialias:true});R.localClippingEnabled=true;const clip=[];const clipMats=[];R.setPixelRatio(Math.min(devicePixelRatio,2));host.appendChild(R.domElement);
   const scene=new THREE.Scene();scene.background=new THREE.Color(dark?0x10161b:0xeef2f5);
   // bounds
   let minx=1e9,maxx=-1e9,miny=1e9,maxy=-1e9;
@@ -309,10 +323,10 @@ function build3d(){
   scene.add(new THREE.HemisphereLight(0xffffff,dark?0x223040:0xb8c4d0,0.85));
   const sun=new THREE.DirectionalLight(0xffffff,0.55);sun.position.set(-30,60,40);scene.add(sun);
   // floor
-  const fl=new THREE.Mesh(new THREE.PlaneGeometry(maxy-miny+6,maxx-minx+6),new THREE.MeshLambertMaterial({color:dark?0x1d262e:0xf7f8f9}));fl.rotation.x=-Math.PI/2;scene.add(fl);
+  const fl=new THREE.Mesh(new THREE.PlaneGeometry(maxy-miny+6,maxx-minx+6),(()=>{const m=new THREE.MeshLambertMaterial({color:dark?0x1d262e:0xf7f8f9});clipMats.push(m);return m})());fl.rotation.x=-Math.PI/2;scene.add(fl);
   const shp=pts=>{const s=new THREE.Shape();pts.forEach(([x,y],i)=>i?s.lineTo(X(x,y),-Z(x,y)):s.moveTo(X(x,y),-Z(x,y)));return s};
   // walls
-  const wallG=new THREE.Group();const wm=new THREE.MeshLambertMaterial({color:dark?0x5b6b78:0xd5dbe1});
+  const wallG=new THREE.Group();const wm=new THREE.MeshLambertMaterial({color:dark?0x5b6b78:0xd5dbe1});clipMats.push(wm);
   for(const w of PLAN.walls){const s=shp(w[0]);for(const hole of w.slice(1))s.holes.push(new THREE.Path(hole.map(([x,y])=>new THREE.Vector2(X(x,y),-Z(x,y)))));
     const g=new THREE.ExtrudeGeometry(s,{depth:1,bevelEnabled:false,curveSegments:1});const me=new THREE.Mesh(g,wm);me.rotation.x=-Math.PI/2;wallG.add(me)}
   wallG.scale.y=1.1;scene.add(wallG);
@@ -320,10 +334,10 @@ function build3d(){
   // fixture outlines
   const sg=new THREE.BufferGeometry(),sv=new Float32Array(PLAN.segs.length/4*6);
   for(let i=0,j=0;i<PLAN.segs.length;i+=4){const a=PLAN.segs[i]/100,b=PLAN.segs[i+1]/100,c=PLAN.segs[i+2]/100,d=PLAN.segs[i+3]/100;sv[j++]=X(a,b);sv[j++]=0.03;sv[j++]=Z(a,b);sv[j++]=X(c,d);sv[j++]=0.03;sv[j++]=Z(c,d)}
-  sg.setAttribute('position',new THREE.BufferAttribute(sv,3));scene.add(new THREE.LineSegments(sg,new THREE.LineBasicMaterial({color:dark?0x8fa2b0:0x7d8b96})));
+  sg.setAttribute('position',new THREE.BufferAttribute(sv,3));const lm=new THREE.LineBasicMaterial({color:dark?0x8fa2b0:0x7d8b96});clipMats.push(lm);scene.add(new THREE.LineSegments(sg,lm));
   // rooms
   const roomMesh={},roomMat={};
-  for(const k in PLAN.rooms){const rr=PLAN.rooms[k];if(!rr.p.length)continue;const mat=new THREE.MeshLambertMaterial({color:0xcfe0f0});roomMat[k]=mat;const grp=new THREE.Group();
+  for(const k in PLAN.rooms){const rr=PLAN.rooms[k];if(!rr.p.length)continue;const mat=new THREE.MeshLambertMaterial({color:0xcfe0f0});roomMat[k]=mat;clipMats.push(mat);const grp=new THREE.Group();
     for(const poly of rr.p){const m=new THREE.Mesh(new THREE.ShapeGeometry(shp(poly)),mat);m.rotation.x=-Math.PI/2;m.position.y=0.015;m.userData.room=k;grp.add(m)}
     scene.add(grp);roomMesh[k]=grp}
   // labels
@@ -332,15 +346,15 @@ function build3d(){
     if(g.roundRect){g.beginPath();g.roundRect(4,4,248,88,18);g.fill();g.stroke()}else{g.fillRect(4,4,248,88);g.strokeRect(4,4,248,88)}
     g.fillStyle='#1d2a35';g.font='700 52px Barlow, Arial, sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(text,128,50);
     const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:false}));sp.scale.set(1.3,0.49,1);sp.position.set(x,2.2,z);sp.renderOrder=5;labelG.add(sp);return sp}
-  const roomCenter={};
+  const roomCenter={},roomLabel={};
   for(const r of DATA){const pts=PLAN.fx.filter(f=>f[3]===r.k);let x,z;
     if(pts.length){x=pts.reduce((a,f)=>a+X(f[0],f[1]),0)/pts.length;z=pts.reduce((a,f)=>a+Z(f[0],f[1]),0)/pts.length}else if(PLAN.rooms[r.k]&&PLAN.rooms[r.k].c){x=X(...PLAN.rooms[r.k].c);z=Z(...PLAN.rooms[r.k].c)}else continue;
-    roomCenter[r.k]=[x,z];label(r.k,x,z)}
+    roomCenter[r.k]=[x,z];roomLabel[r.k]=label(r.k,x,z)}
   // fixtures
   const H={'NORMAL KLOZET':.42,'ENGELLİ KLOZET':.48,'YARIM AYAK LAVABO':.85,'ENGELLİ LAVABO':.8,'EVYE':.9,'LAVABO BATARYASI NORMAL':1.0,'FOTOSELLİ BATARYA':1.0,'DUŞ BATARYASI':1.1,'TUTUNMA BARI - SABİT':.85,'TUTUNMA BARI - HAREKETLİ':.8,'SIVI SABUNLUK-TEZGAH ALTI':.95,'SIVI SABUNLUK-DUVAR':1.15,'KAĞIT HAVLULUK':.7,'GÖMME HAVLULUK':1.25,'EL KURUTMA':1.3,'SAÇ KURUTMA':1.45,'İKİLİ ASKILIK':1.65,'KAPAKSIZ ÇÖP KOVASI':.35};
   const cer=new THREE.MeshLambertMaterial({color:0xf8f8f6}),chrome=new THREE.MeshPhongMaterial({color:0xb8c0c8,shininess:80});
   const matDone=new THREE.MeshLambertMaterial({color:0x4f9a64}),matTodo=new THREE.MeshLambertMaterial({color:0xe9ecef}),matHi=new THREE.MeshLambertMaterial({color:0xf0b429,emissive:0x553300});
-  const pickables=[],heads=[];const headG=new THREE.SphereGeometry(0.1,16,12),pole=new THREE.CylinderGeometry(0.012,0.012,1,6);
+  const pickables=[],heads=[],fxG=[];const headG=new THREE.SphereGeometry(0.1,16,12),pole=new THREE.CylinderGeometry(0.012,0.012,1,6);
   // offset duplicates at same point
   const seenPt={};
   for(const [fx,fy,prod,room] of PLAN.fx){const key=fx+','+fy;const n=seenPt[key]=(seenPt[key]||0)+1;const x=X(fx,fy)+(n-1)*0.14,z=Z(fx,fy);const hh=H[prod]||1;
@@ -352,15 +366,44 @@ function build3d(){
     if(body){body.userData={room,prod};grp.add(body);pickables.push(body)}
     const p=new THREE.Mesh(pole,chrome);p.scale.y=hh+0.25;p.position.y=(hh+0.25)/2;grp.add(p);
     const hd=new THREE.Mesh(headG,matTodo);hd.position.y=hh+0.3;hd.userData={room,prod};grp.add(hd);pickables.push(hd);heads.push(hd);
-    scene.add(grp)}
+    grp.userData={room,prod,hh};fxG.push(grp);scene.add(grp)}
   // selection ring
   const ring=new THREE.Mesh(new THREE.RingGeometry(0.9,1.05,48),new THREE.MeshBasicMaterial({color:0xf0b429,transparent:true,opacity:.85,side:THREE.DoubleSide}));ring.rotation.x=-Math.PI/2;ring.position.y=0.04;ring.visible=false;scene.add(ring);
   function refresh(){
     for(const k in roomMat){const r=roomOf(k);if(!r)continue;const {d,a}=prog(r);roomMat[k].color.set(k===p3sel?0xffd98a:(d===a?0xb9dcc1:(d>0?0xf5dfa8:0xcfe0f0)))}
     for(const hd of heads){const {room,prod}=hd.userData;const s=state[room]||{};hd.material=room===p3sel&&!s[prod]?matHi:(s[prod]?matDone:matTodo)}
-    if(p3sel&&roomCenter[p3sel]){ring.visible=true;ring.position.x=roomCenter[p3sel][0];ring.position.z=roomCenter[p3sel][1]}else ring.visible=false;
+    if(isoRoom)numbers();
+    if(p3sel&&roomCenter[p3sel]&&!isoRoom){ring.visible=true;ring.position.x=roomCenter[p3sel][0];ring.position.z=roomCenter[p3sel][1]}else ring.visible=false;
     p3side();
   }
+
+  // ---- isolation / focus mode
+  let isoRoom=null;const numG=new THREE.Group();scene.add(numG);
+  function numSprite(n,done){const c=document.createElement('canvas');c.width=c.height=96;const g=c.getContext('2d');g.beginPath();g.arc(48,48,42,0,7);g.fillStyle=done?'#4f9a64':'#ffffff';g.fill();g.lineWidth=6;g.strokeStyle=done?'#2f6b40':'#4f74a0';g.stroke();
+    g.fillStyle=done?'#fff':'#1d2a35';g.font='700 46px Barlow, Arial, sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(String(n),48,51);
+    const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:false}));sp.scale.set(.32,.32,1);sp.renderOrder=6;return sp}
+  function bbox(k){let a=1e9,b=-1e9,c=1e9,d=-1e9;const rr=PLAN.rooms[k];
+    if(rr&&rr.p.length){for(const poly of rr.p)for(const [x,y] of poly){const X1=X(x,y),Z1=Z(x,y);a=Math.min(a,X1);b=Math.max(b,X1);c=Math.min(c,Z1);d=Math.max(d,Z1)}}
+    for(const g of fxG)if(g.userData.room===k){a=Math.min(a,g.position.x);b=Math.max(b,g.position.x);c=Math.min(c,g.position.z);d=Math.max(d,g.position.z)}
+    if(a>b){const cc=roomCenter[k]||[0,0];a=cc[0]-2;b=cc[0]+2;c=cc[1]-2;d=cc[1]+2}
+    return [a-.45,b+.45,c-.45,d+.45]}
+  function numbers(){numG.clear();if(!isoRoom)return;const r=roomOf(isoRoom),s=state[isoRoom]||{};
+    for(const g of fxG){if(g.userData.room!==isoRoom)continue;const ix=r.i.findIndex(x=>x[0]===g.userData.prod);if(ix<0)continue;const sp=numSprite(ix+1,!!s[g.userData.prod]);sp.position.set(g.position.x,(g.userData.hh+0.3)*1.2+0.28,g.position.z);numG.add(sp)}}
+  function setClip(on,bb){clip.length=0;if(on){clip.push(new THREE.Plane(new THREE.Vector3(1,0,0),-bb[0]),new THREE.Plane(new THREE.Vector3(-1,0,0),bb[1]),new THREE.Plane(new THREE.Vector3(0,0,1),-bb[2]),new THREE.Plane(new THREE.Vector3(0,0,-1),bb[3]))}
+    for(const m of clipMats){m.clippingPlanes=on?clip:null;m.needsUpdate=true}}
+  function enterIso(k){isoRoom=k;p3sel=k;const bb=bbox(k);setClip(true,bb);
+    for(const g of fxG){const mine=g.userData.room===k;g.visible=mine;g.scale.setScalar(mine?1.2:1)}
+    for(const kk in roomLabel)roomLabel[kk].visible=false;ring.visible=false;
+    $('#p3View').classList.add('full');const r=roomOf(k);$('#isoTitle').textContent=`${r.k} · ${r.n}`;document.body.style.overflow='hidden';
+    const cxm=(bb[0]+bb[1])/2,czm=(bb[2]+bb[3])/2,sz=Math.max(bb[1]-bb[0],bb[3]-bb[2]);
+    if(ctl.maxPolarAngle<0.01)document.querySelector('.sv[data-c="persp"]').click();
+    const a2=(host.clientWidth||1)/(host.clientHeight||1),dd=(sz*1.25+1.8)*Math.max(1,1.15/a2),dv=new THREE.Vector3(0.5,0.78,0.62).normalize();goal={t:new THREE.Vector3(cxm,0.6,czm),p:new THREE.Vector3(cxm+dv.x*dd,0.6+dv.y*dd,czm+dv.z*dd)};ctl.minDistance=1.5;
+    setTimeout(size,30);numbers();refresh()}
+  function exitIso(){if(!isoRoom)return;const k=isoRoom;isoRoom=null;setClip(false);
+    for(const g of fxG){g.visible=true;g.scale.setScalar(1)}for(const kk in roomLabel)roomLabel[kk].visible=true;numG.clear();
+    $('#p3View').classList.remove('full');document.body.style.overflow='';ctl.minDistance=3;setTimeout(size,30);focus(k);refresh()}
+  $('#p3back').addEventListener('click',exitIso);
+  addEventListener('keydown',e=>{if(e.key==='Escape'&&isoRoom)exitIso()});
   // camera
   let goal=null;
   function home(){const W2=(maxy-miny)/2+2,D2=(maxx-minx)/2+2,t=Math.tan(cam.fov*Math.PI/360),d=Math.max(W2/(t*cam.aspect),D2/t)*1.05;cam.position.set(0,d*0.85,d*0.53);ctl.target.set(0,0,0);goal=null}
@@ -374,24 +417,26 @@ function build3d(){
   R.domElement.addEventListener('pointerdown',e=>{down={x:e.clientX,y:e.clientY}});
   R.domElement.addEventListener('pointerup',e=>{if(!down)return;const moved=Math.hypot(e.clientX-down.x,e.clientY-down.y);down=null;if(moved>6)return;
     const o=hit(e);if(!o)return;const {room,prod}=o.userData;
-    if(room===p3sel&&!ro){const r=roomOf(room),ix=r.i.findIndex(x=>x[0]===prod);if(ix<0)return;const keep=cur;cur=room;toggle(ix);save(room);cur=keep;renderAll();
+    if(!isoRoom){enterIso(room);return}
+    if(room!==isoRoom)return;
+    if(!ro){const r=roomOf(room),ix=r.i.findIndex(x=>x[0]===prod);if(ix<0)return;const keep=cur;cur=room;toggle(ix);save(room);cur=keep;renderAll();
       const s2=state[room]||{};flash(`${cap(prod)}: ${s2[prod]?'Yapıldı':'Yapılmadı'}`,e);return}
-    p3sel=room;focus(p3sel);refresh()});
+    });
   function flash(t,e){const b=R.domElement.getBoundingClientRect();tip.hidden=false;tip.style.left=(e.clientX-b.left)+'px';tip.style.top=(e.clientY-b.top)+'px';tip.textContent=t;clearTimeout(flash._t);flash._t=setTimeout(()=>{tip.hidden=true},1400)}
   const tip=$('#p3tip');
   R.domElement.addEventListener('pointermove',e=>{if(e.pointerType!=='mouse')return;const o=hit(e);R.domElement.style.cursor=o?'pointer':'grab';
-    if(o){const b=R.domElement.getBoundingClientRect();const r=roomOf(o.userData.room);const s=state[o.userData.room]||{};tip.hidden=false;tip.style.left=(e.clientX-b.left)+'px';tip.style.top=(e.clientY-b.top)+'px';tip.textContent=`${o.userData.room} · ${cap(o.userData.prod)} — ${s[o.userData.prod]?'Yapıldı':'Yapılmadı'}`+(o.userData.room===p3sel&&!ro?' · değiştirmek için tıkla':'')}else tip.hidden=true});
+    if(o){const b=R.domElement.getBoundingClientRect();const r=roomOf(o.userData.room);const s=state[o.userData.room]||{};tip.hidden=false;tip.style.left=(e.clientX-b.left)+'px';tip.style.top=(e.clientY-b.top)+'px';tip.textContent=`${o.userData.room} · ${cap(o.userData.prod)} — ${s[o.userData.prod]?'Yapıldı':'Yapılmadı'}`+(o.userData.room===isoRoom&&!ro?' · değiştirmek için tıkla':'')}else tip.hidden=true});
   R.domElement.addEventListener('pointerleave',()=>{tip.hidden=true});
   // controls bar
   document.querySelectorAll('.sg').forEach(b=>b.addEventListener('click',()=>{wallG.scale.y=+b.dataset.w;document.querySelectorAll('.sg').forEach(x=>x.setAttribute('aria-pressed',x===b))}));
   document.querySelectorAll('.sv').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.sv').forEach(x=>x.setAttribute('aria-pressed',x===b));
     const t=ctl.target.clone();if(b.dataset.c==='top'){ctl.maxPolarAngle=0.0001;cam.position.set(t.x,Math.max(25,cam.position.distanceTo(t)),t.z+0.01)}else{ctl.maxPolarAngle=Math.PI*0.49;cam.position.set(t.x+span*0.25,span*0.35,t.z+span*0.35)}}));
-  $('#p3reset').addEventListener('click',()=>{p3sel=null;home();document.querySelector('.sv[data-c="persp"]').click();refresh()});
+  $('#p3reset').addEventListener('click',()=>{exitIso();p3sel=null;home();document.querySelector('.sv[data-c="persp"]').click();refresh()});
   const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
   (function loop(){requestAnimationFrame(loop);if(host.offsetParent===null)return;
     if(goal){if(reduce){ctl.target.copy(goal.t);if(ctl.maxPolarAngle>0.01)cam.position.copy(goal.p);goal=null}else{ctl.target.lerp(goal.t,0.12);if(ctl.maxPolarAngle>0.01)cam.position.lerp(goal.p,0.12);else cam.position.lerp(new THREE.Vector3(goal.t.x,cam.position.y,goal.t.z+0.01),0.12);if(ctl.target.distanceTo(goal.t)<0.02)goal=null}}
     ctl.update();R.render(scene,cam)})();
-  window.__p3={refresh,resize:size,_scr:(k)=>{const h=heads.find(x=>x.userData.room===k);if(!h)return null;const v=new THREE.Vector3();h.getWorldPosition(v);v.project(cam);const b=R.domElement.getBoundingClientRect();return [b.left+(v.x+1)/2*b.width,b.top+(1-v.y)/2*b.height]}};refresh();
+  window.__p3={refresh,resize:size,enterIso,exitIso,iso:()=>isoRoom,_scr:(k)=>{const h=heads.find(x=>x.userData.room===k);if(!h)return null;const v=new THREE.Vector3();h.getWorldPosition(v);v.project(cam);const b=R.domElement.getBoundingClientRect();return [b.left+(v.x+1)/2*b.width,b.top+(1-v.y)/2*b.height]}};refresh();
 }
 
 function renderOz(){

@@ -342,10 +342,10 @@ function build3d(){
     scene.add(grp);roomMesh[k]=grp}
   // labels
   const labelG=new THREE.Group();scene.add(labelG);
-  function label(text,x,z){const c=document.createElement('canvas');c.width=256;c.height=96;const g=c.getContext('2d');g.fillStyle='rgba(255,255,255,.88)';g.strokeStyle='#9fbfd8';g.lineWidth=4;
-    if(g.roundRect){g.beginPath();g.roundRect(4,4,248,88,18);g.fill();g.stroke()}else{g.fillRect(4,4,248,88);g.strokeRect(4,4,248,88)}
-    g.fillStyle='#1d2a35';g.font='700 52px Barlow, Arial, sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(text,128,50);
-    const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:false}));sp.scale.set(1.3,0.49,1);sp.position.set(x,2.2,z);sp.renderOrder=5;labelG.add(sp);return sp}
+  function label(text,x,z,big){const c=document.createElement('canvas');c.width=big?512:256;c.height=96;const g=c.getContext('2d');g.fillStyle='rgba(255,255,255,.88)';g.strokeStyle='#9fbfd8';g.lineWidth=4;
+    const W=c.width-8;if(g.roundRect){g.beginPath();g.roundRect(4,4,W,88,18);g.fill();g.stroke()}else{g.fillRect(4,4,W,88);g.strokeRect(4,4,W,88)}
+    g.fillStyle='#1d2a35';g.font='700 52px Barlow, Arial, sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(text,c.width/2,50);
+    const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:false}));sp.scale.set(big?2.6:1.3,0.49,1);sp.position.set(x,2.2,z);sp.renderOrder=5;labelG.add(sp);return sp}
   const roomCenter={},roomLabel={};
   for(const r of DATA){const pts=PLAN.fx.filter(f=>f[3]===r.k);let x,z;
     if(pts.length){x=pts.reduce((a,f)=>a+X(f[0],f[1]),0)/pts.length;z=pts.reduce((a,f)=>a+Z(f[0],f[1]),0)/pts.length}else if(PLAN.rooms[r.k]&&PLAN.rooms[r.k].c){x=X(...PLAN.rooms[r.k].c);z=Z(...PLAN.rooms[r.k].c)}else continue;
@@ -378,7 +378,7 @@ function build3d(){
   }
 
   // ---- isolation / focus mode
-  let isoRoom=null;const numG=new THREE.Group();scene.add(numG);
+  let isoRoom=null,isoLabel=null;const numG=new THREE.Group();scene.add(numG);
   function numSprite(n,done){const c=document.createElement('canvas');c.width=c.height=96;const g=c.getContext('2d');g.beginPath();g.arc(48,48,42,0,7);g.fillStyle=done?'#4f9a64':'#ffffff';g.fill();g.lineWidth=6;g.strokeStyle=done?'#2f6b40':'#4f74a0';g.stroke();
     g.fillStyle=done?'#fff':'#1d2a35';g.font='700 46px Barlow, Arial, sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(String(n),48,51);
     const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:false}));sp.scale.set(.32,.32,1);sp.renderOrder=6;return sp}
@@ -394,13 +394,14 @@ function build3d(){
   function enterIso(k){isoRoom=k;p3sel=k;const bb=bbox(k);setClip(true,bb);
     for(const g of fxG){const mine=g.userData.room===k;g.visible=mine;g.scale.setScalar(mine?1.2:1)}
     for(const kk in roomLabel)roomLabel[kk].visible=false;ring.visible=false;
+    {const r0=roomOf(k);if(isoLabel){labelG.remove(isoLabel)}isoLabel=label(`${r0.k} · ${r0.n}`,(bb[0]+bb[1])/2,(bb[2]+bb[3])/2,true);isoLabel.position.y=3.45;isoLabel.scale.set(1.9,0.36,1)}
     $('#p3View').classList.add('full');const r=roomOf(k);$('#isoTitle').textContent=`${r.k} · ${r.n}`;document.body.style.overflow='hidden';
     const cxm=(bb[0]+bb[1])/2,czm=(bb[2]+bb[3])/2,sz=Math.max(bb[1]-bb[0],bb[3]-bb[2]);
     if(ctl.maxPolarAngle<0.01)document.querySelector('.sv[data-c="persp"]').click();
     const a2=(host.clientWidth||1)/(host.clientHeight||1),dd=(sz*1.25+1.8)*Math.max(1,1.15/a2),dv=new THREE.Vector3(0.5,0.78,0.62).normalize();goal={t:new THREE.Vector3(cxm,0.6,czm),p:new THREE.Vector3(cxm+dv.x*dd,0.6+dv.y*dd,czm+dv.z*dd)};ctl.minDistance=1.5;
     setTimeout(size,30);numbers();refresh()}
   function exitIso(){if(!isoRoom)return;const k=isoRoom;isoRoom=null;setClip(false);
-    for(const g of fxG){g.visible=true;g.scale.setScalar(1)}for(const kk in roomLabel)roomLabel[kk].visible=true;numG.clear();
+    for(const g of fxG){g.visible=true;g.scale.setScalar(1)}for(const kk in roomLabel)roomLabel[kk].visible=true;numG.clear();if(isoLabel){labelG.remove(isoLabel);isoLabel=null}
     $('#p3View').classList.remove('full');document.body.style.overflow='';ctl.minDistance=3;setTimeout(size,30);focus(k);refresh()}
   $('#p3back').addEventListener('click',exitIso);
   addEventListener('keydown',e=>{if(e.key==='Escape'&&isoRoom)exitIso()});

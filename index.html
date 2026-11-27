@@ -273,7 +273,7 @@ function p3side(){
   const hasTakip=!!document.querySelector('.tab[data-v="takip"]');
   el.innerHTML=`<h3>${esc(r.k)} · ${esc(r.n)}</h3><div class="code">${esc(r.a)} m² · ${d} / ${a} adet yapıldı</div>
    <div class="meter"><i style="width:${a?d/a*100:0}%"></i></div>
-   ${ro?'<div class="robox">Salt okunur görünüm.</div>':''}
+   ${ro?'<div class="robox">Salt okunur görünüm.</div>':'<p class="foot" style="margin:0 0 10px">3D\'de bu mahaldeki bir vitrifiyeye dokunarak ya da aşağıdaki listeden durumunu değiştirebilirsiniz.</p>'}
    <ul class="items${ro?' ro':''}" id="p3items">${r.i.map(([p,qn,add],ix)=>`<li class="it${s[p]?' on':''}" data-ix="${ix}" role="checkbox" aria-checked="${!!s[p]}" aria-disabled="${ro}" tabindex="${ro?-1:0}"><span class="box">${tick}</span><span class="t">${esc(cap(p))}${add?'<small>Planda konumu yok</small>':''}</span><span class="q">${qn} adet</span></li>`).join('')}</ul>
    ${hasTakip?'<p style="margin:12px 0 0"><button class="btn" id="p3go">Montaj Takibi\'nde aç</button></p>':''}`;
 }
@@ -373,10 +373,14 @@ function build3d(){
   function hit(ev){const b=R.domElement.getBoundingClientRect();mv.x=((ev.clientX-b.left)/b.width)*2-1;mv.y=-((ev.clientY-b.top)/b.height)*2+1;ray.setFromCamera(mv,cam);const h=ray.intersectObjects(pickables,false);return h.length?h[0].object:null}
   R.domElement.addEventListener('pointerdown',e=>{down={x:e.clientX,y:e.clientY}});
   R.domElement.addEventListener('pointerup',e=>{if(!down)return;const moved=Math.hypot(e.clientX-down.x,e.clientY-down.y);down=null;if(moved>6)return;
-    const o=hit(e);if(o){p3sel=o.userData.room;focus(p3sel);refresh()}});
+    const o=hit(e);if(!o)return;const {room,prod}=o.userData;
+    if(room===p3sel&&!ro){const r=roomOf(room),ix=r.i.findIndex(x=>x[0]===prod);if(ix<0)return;const keep=cur;cur=room;toggle(ix);save(room);cur=keep;renderAll();
+      const s2=state[room]||{};flash(`${cap(prod)}: ${s2[prod]?'Yapıldı':'Yapılmadı'}`,e);return}
+    p3sel=room;focus(p3sel);refresh()});
+  function flash(t,e){const b=R.domElement.getBoundingClientRect();tip.hidden=false;tip.style.left=(e.clientX-b.left)+'px';tip.style.top=(e.clientY-b.top)+'px';tip.textContent=t;clearTimeout(flash._t);flash._t=setTimeout(()=>{tip.hidden=true},1400)}
   const tip=$('#p3tip');
   R.domElement.addEventListener('pointermove',e=>{if(e.pointerType!=='mouse')return;const o=hit(e);R.domElement.style.cursor=o?'pointer':'grab';
-    if(o){const b=R.domElement.getBoundingClientRect();const r=roomOf(o.userData.room);const s=state[o.userData.room]||{};tip.hidden=false;tip.style.left=(e.clientX-b.left)+'px';tip.style.top=(e.clientY-b.top)+'px';tip.textContent=`${o.userData.room} · ${cap(o.userData.prod)} — ${s[o.userData.prod]?'Yapıldı':'Yapılmadı'}`}else tip.hidden=true});
+    if(o){const b=R.domElement.getBoundingClientRect();const r=roomOf(o.userData.room);const s=state[o.userData.room]||{};tip.hidden=false;tip.style.left=(e.clientX-b.left)+'px';tip.style.top=(e.clientY-b.top)+'px';tip.textContent=`${o.userData.room} · ${cap(o.userData.prod)} — ${s[o.userData.prod]?'Yapıldı':'Yapılmadı'}`+(o.userData.room===p3sel&&!ro?' · değiştirmek için tıkla':'')}else tip.hidden=true});
   R.domElement.addEventListener('pointerleave',()=>{tip.hidden=true});
   // controls bar
   document.querySelectorAll('.sg').forEach(b=>b.addEventListener('click',()=>{wallG.scale.y=+b.dataset.w;document.querySelectorAll('.sg').forEach(x=>x.setAttribute('aria-pressed',x===b))}));
